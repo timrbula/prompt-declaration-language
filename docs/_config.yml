@@ -33,6 +33,7 @@ url: https://pages.github.ibm.com/ml4code/pdl/ # the base hostname & protocol fo
 theme: minima
 plugins:
   - jekyll-feed
+markdown: kramdown
 
 # Exclude from processing.
 # The following items will not be processed, by default.
