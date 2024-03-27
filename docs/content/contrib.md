@@ -8,7 +8,7 @@ To report an issue, or to suggest an idea for a change that you haven't
 had time to write-up yet:
 1.  [Review existing issues](https://github.ibm.com/ml4code/pdl/issues) to see if a similar issue has been opened or discussed.
 2.  [Open an
-issue](https://github.ibm.com/ml4code/pdl/issues/new). Be sure to include any helpful information, such as your Kubernetes environment details, error messages, or logs that you might have.
+issue](https://github.ibm.com/ml4code/pdl/issues/new). Be sure to include any helpful information, such as error messages, or logs that you might have.
 
 
 ## Suggesting a change

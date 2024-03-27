@@ -62,14 +62,20 @@
 \newcommand{\pdlrepeat}[2]{\ensuremath{\jsobj{\mtt{repeat:}{#1}\mtt{,} \mtt{ntimes:}{#2}}}}
 \newcommand{\pdlrepeatuntil}[2]{\ensuremath{\jsobj{\mtt{repeat:}{#1}\mtt{,} \mtt{until:}{#2}}}}
 \newcommand{\pdlinput}[1]{\ensuremath{\jsobj{\mtt{input:}{#1}}}}
-\newcommand{\pdlfunction}[2]{\ensuremath{\jsobj{\mtt{function:}{#1}\mtt{,}  \mtt{document:}{#2}}}}
-\newcommand{\pdlclosure}[3]{\ensuremath{\jsobj{\mtt{function:}{#1}\mtt{,}  \mtt{document:}{#2}, \mtt{scope:}{#3}}}}
+\newcommand{\pdlfunction}[2]{\ensuremath{\jsobj{\mtt{function:}{#1}\mtt{,}  \mtt{return:}{#2}}}}
+\newcommand{\pdlclosure}[3]{\ensuremath{\jsobj{\mtt{function:}{#1}\mtt{,}  \mtt{return:}{#2}, \mtt{scope:}{#3}}}}
 \newcommand{\pdlcall}[2]{\ensuremath{\jsobj{\mtt{call:}{#1}\mtt{,} \mtt{args:}{#2}}}}
 
 
 
 % Semantics
 
+\newcommand{\pdlSemp}[5]{\ensuremath{{#1}, {#2} \Rightarrow {#3}, {#4}, {#5}}}
+\newcommand{\pdlSembb}[5]{\ensuremath{{#1}, {#2} \Rightarrow {#3}, {#4}, {#5}}}
+\newcommand{\pdlSemc}[3]{\ensuremath{{#1} \vdash {#2} \Downarrow {#3}}}
+\newcommand{\pdlSeme}[3]{\ensuremath{{#1} \vdash {#2} \Downarrow {#3}}}
+
+\newcommand{\pdlhole}{\ensuremath{[\,]}}
 \newcommand{\pdlsemp}[5]{\ensuremath{{#1}, {#2} \Rightarrow {#3}, {#4}, {#5}}}
 \newcommand{\pdlsembb}[5]{\ensuremath{{#1}, {#2} \rightarrow {#3}, {#4}, {#5}}}
 \newcommand{\pdlsemc}[3]{\ensuremath{{#1}, {#2} \downarrow {#3}}}
@@ -81,8 +87,10 @@
 Language:
 $$
 \begin{array}{lcl}
-    \mit{document} & ::= &\ 
-        \jsarr{\mit{block}\mtt{,} \dots\mtt{,} \mit{block}}
+    \mit{blocks} & ::= &\ 
+    \mit{block}
+    \\ &&\mid
+    \jsarr{\mit{block}\mtt{,} \dots\mtt{,} \mit{block}}
     \\
     \mit{block} & ::= &\
     \mit{string}
@@ -117,7 +125,7 @@ $$
     \\ &&\mid
     \pdlinput{\mit{msg}}
     \\ &&\mid
-    \pdlfunction{\mit{json\_schema}}{\mit{block\_body}}
+    \pdlfunction{\mit{json\_schema}}{\mit{document}}
     \\ &&\mid
     \pdlcall{f}{\mit{json}}
     \\
@@ -130,40 +138,40 @@ $$
 
 The semantics of a document~$d$ is defined by the reduction $\pdlsemp{S}{d}{S'}{v}{s}$ which evaluates~$d$ in the environment~$S$ to return the updated environment~$S'$, the value~$v$, and the string~$s$.
 
-The semantics of a block body~$b$ is defined by the reductions $\pdlsembb{S}{b}{S'}{v}{s}$ which evaluates~$b$ in the environment~$S$ to return the updated environment~$S'$, the value~$v$, and the string~$s$.
+The semantics of a block body~$b$ is defined by the reductions $\pdlSembb{S}{b}{S'}{v}{s}$ which evaluates~$b$ in the environment~$S$ to return the updated environment~$S'$, the value~$v$, and the string~$s$.
 
 \begin{mathpar}
 % String
 \inferrule%
 { \\
 }
-{\pdlsemp{S}{s}{S}{s}{s}}
+{\pdlSemp{S}{s}{S}{s}{s}}
 
 
 % Block show = true
 \inferrule%
-{\pdlsembb{S}{b}{S'}{v}{s} \\
+{\pdlSembb{S}{b}{S'}{v}{s} \\
 }
 {\pdlsemp{S}{\pdlblock[\True]{x}{b}}{S'[x \leftarrow (v, s)]}{v}{s}}
 
 % Block show = false
 \inferrule%
-{\pdlsembb{S}{b}{S'}{v}{s} \\
+{\pdlSembb{S}{b}{S'}{v}{s} \\
 }
 {\pdlsemp{S}{\pdlblock[\False]{x}{b}}{S'[x \leftarrow (v, s)]}{v}{\jsstr{}}}
 
 % Defs empty
 \inferrule%
-{\pdlsemp{S}{\mit{block}}{S'}{v}{s}
+{\pdlSemp{S}{\mit{block}}{S'}{v}{s}
 }
-{\pdlsemp{S}{\pdlblockdefs{\jsobj{}}{\mit{block}}}{S'}{v}{s}}
+{\pdlSemp{S}{\pdlblockdefs{\jsobj{}}{\mit{block}}}{S'}{v}{s}}
 
 % Defs
 \inferrule%
 {\pdlsembb{S}{b_x}{S_x}{v_x}{s_x} \\
  \pdlsemp{S[x \leftarrow (v_x, s_x)]}{\pdlblockdefs{\jsobj{\mit{defs}}}{\mit{block}}}{S'}{v}{s}
 }
-{\pdlsemp{S}{\pdlblockdefs{\jsobj{\pdldef{x}{b_x}\mtt{,} \mit{defs}}}{\mit{block}}}{S'}{v}{s}}
+{\pdlSemp{S}{\pdlblockdefs{\jsobj{\pdldef{x}{b_x}\mtt{,} \mit{defs}}}{\mit{block}}}{S'}{v}{s}}
 
 \end{mathpar}
 
@@ -172,14 +180,14 @@ The semantics of a block body~$b$ is defined by the reductions $\pdlsembb{S}{b}{
 \inferrule%
 {
 }
-{\pdlsemp{S}{\jsarr{}}
+{\pdlSemp{S}{\jsarr{}}
           {S}{\jsarr{}}{\jsstr{}}}
 
 % Sequence one
 \inferrule%
-{\pdlsemp{S}{p}{S'}{v}{s}
+{\pdlSemp{S}{p}{S'}{v}{s}
 }
-{\pdlsemp{S}{\jsarr{p}}{S'}{\jsarr{v}}{s}}
+{\pdlSemp{S}{\jsarr{p}}{S'}{\jsarr{v}}{s}}
 
 % Sequence
 \inferrule%
@@ -280,8 +288,8 @@ The semantics of a block body~$b$ is defined by the reductions $\pdlsembb{S}{b}{
 
 % Repeats_until false
 \inferrule%
-{\pdlsemp{S}{p}{S'}{v}{s}\\
- \pdlsemc{S'}{c}{\False}
+{\pdlSemp{S}{p}{S'}{v}{s}\\
+ \pdlSemc{S'}{c}{\False}
 }
 {\pdlsembb{S}{\pdlrepeatuntil{p}{c}}{S'}{v}{s}}
 
@@ -298,5 +306,58 @@ The semantics of a block body~$b$ is defined by the reductions $\pdlsembb{S}{b}{
 {\pdlsembb{S}{\pdlcall{f}{\mit{args}}}{S}{v}{s}}
 
 \end{mathpar}
+
+% \subsection*{Small Step Semantics}
+
+
+% Context:
+% $$
+% \begin{array}{lcl}
+%     \mit{document\_ctx} & ::= &\ 
+%         \jsarr{\mit{block\_ctx}\mtt{,} \dots\mtt{,} \mit{block}}
+%     \\
+%     \mit{block\_ctx} & ::= &\
+%     \pdlblock[\mit{show}]{x}{\mit{block\_body\_ctx}}
+%     \\ &&\mid
+%     \pdlblockdefs{\mit{defs\_ctx}}{\pdlblockstar[\mit{show}]{x}{\mit{block\_body}}}
+%     % \\ &&\mid
+%     % \pdlblockdefs{\mit{defs}}{\pdlblockstar[\mit{show}]{x}{\mit{block\_body\_ctx}}}
+%     \\
+%     \mit{defs\_ctx} & ::= &\
+%     \jsobj{\pdldef{x}{\mit{block\_body\_ctx}}\mtt{,} \dots\mtt{,}\pdldef{x}{\mit{block\_body}}}
+%     \\
+%     \mit{block\_body\_ctx} & ::= &\ 
+%     \pdlhole
+%     \\ &&\mid
+%     \pdlmodel{\mit{model}}{\mit{document\_ctx}}
+%     \\ &&\mid
+%     \pdlcode{\mit{document\_ctx}}
+%     \\ &&\mid
+%     \pdlapi{\mit{url}}{\mit{api}}{\mit{document\_ctx}}
+%     % \\ &&\mid
+%     % \pdlget{\mit{x}}
+%     % \\ &&\mid
+%     % \pdldata{\mit{json}}
+%     % % \\ &&\mid
+%     % % \pdldatap{\mit{json}}{\mit{string}}
+%     \\ &&\mid
+%     \pdlsequence{\mit{document\_ctx}}
+%     % \\ &&\mid
+%     % \pdlif{\mit{condition}}{\mit{document}}
+%     % \\ &&\mid
+%     % \pdlrepeat{\mit{document}}{\mit{n}}
+%     % \\ &&\mid
+%     % \pdlrepeatuntil{\mit{document}}{\mit{condition}}
+%     % \\ &&\mid
+%     % \pdlinput{\mit{msg}}
+%     % \\ &&\mid
+%     % \pdlfunction{\mit{json\_schema}}{\mit{block\_body}}
+%     % \\ &&\mid
+%     % \pdlcall{f}{\mit{json}}
+%     % \\
+%     % \mit{condition} & ::= &\ \dots
+
+% \end{array}
+% $$
 
 \end{document}
